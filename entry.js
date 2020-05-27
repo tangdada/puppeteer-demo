@@ -99,6 +99,42 @@ Router.get('/demo2', function (req, res) {
 
 });
 
+// demo3: 自动化UI测试
+Router.get('/demo3', function (req, res) {
+    (async () => {
+        try {
+            // 初始化环境 并 打开页面
+            const browser = await puppeteer.launch({ headless: false })
+            const page = await browser.newPage()
+            await page.goto('https://www.mytijian.com/m/mt', { waitUntil: 'networkidle2' })
+            
+            await page.waitForSelector('.login-link')
+            await page.click('.login-link')
+
+            await page.waitForSelector('input[placeholder="请填写手机号码"]')
+
+            const elementHandle = await page.$('input[placeholder="请填写手机号码"]')
+            await elementHandle.type('12333333333')
+            
+            await page.waitFor(500)
+            const btnHandle = await page.$('.weui-cell__ft button.weui-vcode-btn')
+            await btnHandle.click()
+
+            await page.waitFor(500)
+            const tweetHandle = await page.$('.weui-toast__content')
+            let ht = await tweetHandle.$eval('.weui-toast__content-warning', node => node.innerHTML)
+            console.log(ht)
+            console.log(expect(await tweetHandle.$eval('.weui-toast__content-warning', node => node.innerText)).toBe('100'))
+
+            
+            res.end('Router demo3 success!!\n');
+        } catch (error) {
+            res.end('Router demo3 fail!!\n');
+        }
+    })();
+
+});
+
 
 
 
