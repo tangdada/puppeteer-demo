@@ -38,7 +38,7 @@ Router.get('/demo1', function (req, res) {
                 href: option.href
             }
         }))
-        
+
         // 把抓取内容写入到top10.txt文件中
         let content = articleInfos.slice(0, 10).map((info => {
             return `${info.innerHTML}\r\n${info.href}`
@@ -56,6 +56,49 @@ Router.get('/demo1', function (req, res) {
     })();
 
 });
+
+// demo2: 百度搜索“puppeteer”然后跳转到puppeteer GitHub主页
+Router.get('/demo2', function (req, res) {
+    (async () => {
+        try {
+            // 初始化环境 并 打开页面
+            const browser = await puppeteer.launch({ headless: false })
+            const page = await browser.newPage()
+            await page.goto('https://www.baidu.com', { waitUntil: 'networkidle2' })
+
+            await page.waitFor(1000)
+
+            const elementHandle = await page.$('#kw');
+            await elementHandle.type('puppeteer');
+            await elementHandle.press('Enter');
+
+            await page.waitFor(1000)
+
+            // 等页面加载完毕
+            await page.waitForSelector('.result h3.t a')
+
+            // 找到包含GitHub的条目
+            const handles = await page.$$('.result h3.t a')
+            const items = await page.$$eval('.result h3.t a', options => options.map(option => option.innerHTML))
+            let targetItemIdx = 0;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].indexOf('GitHub') > -1) {
+                    targetItemIdx = i
+                    break
+                }
+            }
+
+            // 点击条目
+            await handles[targetItemIdx].click()
+
+            res.end('Router demo2 success!!\n');
+        } catch (error) {
+            res.end('Router demo2 fail!!\n');
+        }
+    })();
+
+});
+
 
 
 
