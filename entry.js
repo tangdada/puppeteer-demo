@@ -55,7 +55,7 @@ Router.get('/demo1', function (req, res) {
         // 关闭浏览器
         await browser.close();
 
-        res.end('Router demo1 success!!\n');
+        res.end('Router demo1 success!!\n')
     })();
 
 });
@@ -71,7 +71,7 @@ Router.get('/demo2', function (req, res) {
 
             await page.waitFor(1000)
 
-            const elementHandle = await page.$('#kw');
+            const elementHandle = await page.$('#kw')
             await elementHandle.type('puppeteer');
             await elementHandle.press('Enter');
 
@@ -94,9 +94,9 @@ Router.get('/demo2', function (req, res) {
             // 点击条目
             await handles[targetItemIdx].click()
 
-            res.end('Router demo2 success!!\n');
+            res.end('Router demo2 success!!\n')
         } catch (error) {
-            res.end('Router demo2 fail!!\n');
+            res.end('Router demo2 fail!!\n')
         }
     })();
 
@@ -113,33 +113,78 @@ Router.get('/demo3', function (req, res) {
                 const page = await browser.newPage()
                 await page.goto('https://www.mytijian.com/m/mt', { waitUntil: 'networkidle2' })
 
+                // 跳转到登录页
                 await page.waitForSelector('.login-link')
                 await page.click('.login-link')
 
+                // 输入手机号
                 await page.waitForSelector('input[placeholder="请填写手机号码"]')
-
                 const elementHandle = await page.$('input[placeholder="请填写手机号码"]')
                 let { mobile } = req.query
                 await elementHandle.type(mobile)
 
+                // 点击发送验证码
                 await page.waitFor(500)
                 const btnHandle = await page.$('.weui-cell__ft button.weui-vcode-btn')
                 await btnHandle.click()
 
+                // 检测返回结果是否正确
                 await page.waitFor(500)
-
                 expect(await tweetHandle.$eval('.weui-toast__content-warning', node => node.innerText.trim())).to.equal('请输入合格的手机号码')
 
-                res.end('Router demo3 success!!\n');
+                res.end('Router demo3 success!!\n')
             } catch (error) {
                 console.log(error)
-                res.end(error.toString());
+                res.end(error.toString())
             }
         })();
 
 });
 
+// demo4: 生成页面的截图和PDF文件
+Router.get('/demo4', function (req, res) {
+    res.writeHead(200, { 'Content-Type': 'text/html;charset=utf-8' })
 
+        ; (async () => {
+            try {
+                // 初始化环境 并 打开页面
+                const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+                const page = await browser.newPage()
+                await page.goto('http://www.dili360.com')
+
+                // 等待页面加载完毕
+                await page.waitForSelector('.tags .right')
+                // 隐藏项部导航
+                await page.addStyleTag({content: '.part-two { display: none; }'})
+                // 指定截屏板块
+                const elementHandle = await page.$('.tags .right')
+                await elementHandle.screenshot({path: 'screenshot.png'})
+
+                // -------------------------------
+                // 打开央视网，生成PDF
+                await page.goto('http://news.cctv.com')
+                await page.pdf({
+                    path: 'news.pdf',
+                    format: 'A4',
+                    printBackground: true,
+                    margin: {
+                      top: '15mm',
+                      bottom: '15mm'
+                    },
+                    displayHeaderFooter: true,
+                    footerTemplate: '<div style="font-size: 14px;"><span class="pageNumber"></span>/<span class="totalPages"></span></div>',
+                    headerTemplate: '<div style="font-size: 14px;">I"m header!</div>',
+                  });
+
+                await browser.close()
+
+                res.end('Router demo4 success!!\n')
+            } catch (error) {
+                res.end(error.toString())
+            }
+        })();
+
+});
 
 
 app.use(Router);
