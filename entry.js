@@ -6,19 +6,18 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 //引入测试模块
 var chai = require('chai');
-var expect = chai.expect; // we are using the "expect" style of Chai
+var expect = chai.expect;
 
 //创建实例
-var app = express();
+var app = express();
 
-//Router 方法
-var Router = express.Router();
+//Router 方法
+var Router = express.Router();
 
-Router.get('/test', function (req, res) {
-    res.end('Router test success!\n');
+Router.get('/test', function (req, res) {
+    res.end('Router test success!\n');
 });
 
-// demo1: 获取掘金前端推荐的前10文章列表
 Router.get('/demo1', function (req, res) {
     ; (async () => {
         // 初始化环境 并 打开页面
@@ -59,6 +58,7 @@ Router.get('/demo1', function (req, res) {
     })();
 
 });
+
 
 // demo2: 百度搜索“puppeteer”然后跳转到puppeteer GitHub主页
 Router.get('/demo2', function (req, res) {
@@ -121,7 +121,7 @@ Router.get('/demo3', function (req, res) {
                 await page.waitForSelector('input[placeholder="请填写手机号码"]')
                 const elementHandle = await page.$('input[placeholder="请填写手机号码"]')
                 let { mobile } = req.query
-                await elementHandle.type(mobile)
+                await elementHandle.type(mobile || '12333333333')
 
                 // 点击发送验证码
                 await page.waitFor(500)
@@ -130,7 +130,9 @@ Router.get('/demo3', function (req, res) {
 
                 // 检测返回结果是否正确
                 await page.waitFor(500)
-                expect(await tweetHandle.$eval('.weui-toast__content-warning', node => node.innerText.trim())).to.equal('请输入合格的手机号码')
+                expect(await page.$eval('.weui-toast__content-warning', node => node.innerText.trim())).to.equal('验证码不能为空')
+
+                await browser.close()
 
                 res.end('Router demo3 success!!\n')
             } catch (error) {
@@ -186,8 +188,7 @@ Router.get('/demo4', function (req, res) {
 
 });
 
-
 app.use(Router);
-app.listen(7878, function afterListen() {
-    console.log('express running on http://localhost:7878');
+app.listen(7878, function afterListen() {
+    console.log('express running on http://localhost:7878');
 });
